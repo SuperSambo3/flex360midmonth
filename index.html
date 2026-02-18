@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MidMonth Meeting: EXTREME</title>
+    <title>MidMonth Meeting: Cupids Edition</title>
     <style>
         body {
             background-color: #1e1e1e; 
@@ -16,14 +16,27 @@
             margin: 0;
             padding: 20px;
             user-select: none;
-            overflow: hidden; /* Lock scroll */
+            overflow: hidden; 
             transition: background-color 1s ease;
         }
 
-        /* --- DRAMA STATES --- */
-        body.spinning {
-            background-color: #000;
+        /* --- CUPID DECORATION --- */
+        .cupid-frame {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* This looks for the file named cupids.png in your repo */
+            background-image: url('cupids.png'); 
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover; /* Adjusts to fill screen. Change to 'contain' if it gets cut off */
+            pointer-events: none; /* Lets clicks pass through */
+            z-index: 1; /* Sits above background, below wheel */
+            opacity: 0.8;
         }
+
+        /* --- DRAMA STATES --- */
+        body.spinning { background-color: #000; }
         
         body.red-alert {
             animation: redAlert 0.5s infinite alternate;
@@ -41,22 +54,23 @@
             margin-bottom: 10px;
             text-align: center;
             letter-spacing: 2px;
-            transition: opacity 0.5s, transform 0.5s;
+            position: relative; z-index: 10;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .subtitle {
-            color: #888;
+            color: #ccc;
             margin-bottom: 20px;
             font-size: 1.2rem;
             height: 30px;
-            transition: opacity 0.5s;
+            position: relative; z-index: 10;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
         /* Hide elements during spin */
-        body.spinning h1, body.spinning .subtitle, body.spinning .controls, body.spinning .history-section {
+        body.spinning h1, body.spinning .subtitle, body.spinning .controls, body.spinning .history-section, body.spinning .cupid-frame {
             opacity: 0.1;
             filter: blur(2px);
-            pointer-events: none;
         }
 
         /* --- THE WHEEL --- */
@@ -64,13 +78,10 @@
             position: relative;
             margin-bottom: 40px;
             transition: transform 1s cubic-bezier(0.1, 0.9, 0.2, 1);
-            z-index: 10;
+            z-index: 20; /* Above cupids */
         }
 
-        /* Zoom the wheel when spinning */
-        body.spinning .wheel-container {
-            transform: scale(1.3);
-        }
+        body.spinning .wheel-container { transform: scale(1.3); }
 
         .window {
             height: 240px; 
@@ -83,78 +94,38 @@
             position: relative;
             display: flex;
             justify-content: center;
-            
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
-            
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Glowing Border */
-        body.spinning .window {
-            border-color: #fff;
-            box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
-        }
-        
-        body.red-alert .window {
-            border-color: red;
-            box-shadow: 0 0 80px rgba(255, 0, 0, 0.6);
-        }
+        body.spinning .window { border-color: #fff; box-shadow: 0 0 50px rgba(255, 255, 255, 0.2); }
+        body.red-alert .window { border-color: red; box-shadow: 0 0 80px rgba(255, 0, 0, 0.6); }
 
-        /* Side Pointers */
         .pointer-left, .pointer-right {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
+            position: absolute; top: 50%; transform: translateY(-50%);
             width: 0; height: 0; 
-            border-top: 15px solid transparent;
-            border-bottom: 15px solid transparent;
-            z-index: 20;
-            transition: transform 0.5s;
+            border-top: 15px solid transparent; border-bottom: 15px solid transparent;
+            z-index: 20; transition: transform 0.5s;
         }
-
         .pointer-left { left: -30px; border-left: 20px solid #fff; }
         .pointer-right { right: -30px; border-right: 20px solid #fff; }
 
         body.spinning .pointer-left { transform: translateY(-50%) translateX(10px); }
         body.spinning .pointer-right { transform: translateY(-50%) translateX(-10px); }
 
-        .strip {
-            width: 100%;
-            transform: translateY(0px); 
-            will-change: transform;
-        }
-
+        .strip { width: 100%; transform: translateY(0px); will-change: transform; }
         .strip div {
-            height: 120px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-align: center;
-            width: 100%;
-            box-sizing: border-box;
-            text-shadow: 0 2px 0 rgba(0,0,0,0.5);
+            height: 120px; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: bold; text-align: center; width: 100%;
+            box-sizing: border-box; text-shadow: 0 2px 0 rgba(0,0,0,0.5);
         }
 
         /* --- CONTROLS --- */
-        .controls {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 40px;
-            transition: opacity 0.5s;
-        }
-
+        .controls { display: flex; gap: 20px; margin-bottom: 40px; position: relative; z-index: 20; }
         button {
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.1s;
-            font-weight: bold;
-            text-transform: uppercase;
+            padding: 15px 40px; font-size: 1.2rem; border: none; border-radius: 8px;
+            cursor: pointer; transition: transform 0.1s; font-weight: bold; text-transform: uppercase;
         }
         button:active { transform: translateY(2px); }
         #spin-btn { background: #ffffff; color: #000; box-shadow: 0 4px 0 #999; }
@@ -166,54 +137,32 @@
             width: 100%; max-width: 400px;
             background: #252525; padding: 20px;
             border-radius: 12px; border: 1px solid #333;
-            transition: opacity 0.5s;
+            position: relative; z-index: 20;
         }
         .history-title { color: #888; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
         .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item { display: flex; justify-content: space-between; padding: 10px; background: #1e1e1e; border-radius: 6px; font-size: 1.1rem; }
 
-        /* --- WINNER MODAL (THE TAKEOVER) --- */
+        /* --- WINNER MODAL --- */
         #winner-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 999;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 999;
+            flex-direction: column; justify-content: center; align-items: center;
             animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
-        @keyframes modalPop {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
+        @keyframes modalPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         #winner-name {
-            font-size: 6rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            margin-bottom: 20px;
-            text-align: center;
-            line-height: 1;
+            font-size: 6rem; font-weight: 900; text-transform: uppercase;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 20px; text-align: center; line-height: 1;
         }
-
-        #close-modal-btn {
-            background: transparent;
-            border: 2px solid white;
-            color: white;
-            padding: 10px 30px;
-            margin-top: 30px;
-            font-size: 1rem;
-        }
-
+        #close-modal-btn { background: transparent; border: 2px solid white; color: white; padding: 10px 30px; margin-top: 30px; font-size: 1rem; }
+        
         #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
-
     </style>
 </head>
 <body>
+
+    <div class="cupid-frame"></div>
 
     <canvas id="confetti"></canvas>
 
@@ -261,53 +210,37 @@
         const ITEM_HEIGHT = 120; 
         const CENTER_OFFSET = 60; 
 
-        // --- AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playTick(intensity) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            
-            // Rising pitch based on intensity (0 to 1)
             const baseFreq = 80 + (intensity * 200); 
-            osc.type = 'sawtooth'; // Grittier sound
+            osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, audioCtx.currentTime + 0.1);
-            
             gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            
-            // Lowpass filter to muffle it slightly
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.value = 1000 + (intensity * 2000);
-
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
+            osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
 
         function playBoom() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            
-            // Deep Boom
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(0.01, now + 1.5);
             gain.gain.setValueAtTime(0.5, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 1.5);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 1.5);
 
-            // Fanfare
             [261.6, 329.6, 392.0, 523.2, 783.9].forEach((freq, i) => {
                 const osc2 = audioCtx.createOscillator();
                 const gain2 = audioCtx.createGain();
@@ -317,25 +250,19 @@
                 gain2.gain.setValueAtTime(0, start);
                 gain2.gain.linearRampToValueAtTime(0.1, start + 0.1);
                 gain2.gain.exponentialRampToValueAtTime(0.001, start + 3);
-                osc2.connect(gain2);
-                gain2.connect(audioCtx.destination);
-                osc2.start(start);
-                osc2.stop(start + 3);
+                osc2.connect(gain2); gain2.connect(audioCtx.destination);
+                osc2.start(start); osc2.stop(start + 3);
             });
         }
-
-        // --- LOGIC ---
 
         function initWheel() {
             const strip = document.getElementById('strip');
             let html = "";
-            
             if(currentPool.length === 0) {
                 strip.innerHTML = "<div style='height:240px; display:flex; align-items:center; justify-content:center; color:white;'>ALL DONE!</div>";
                 document.getElementById('spin-btn').disabled = true;
                 return;
             }
-
             for(let i=0; i<60; i++) {
                 currentPool.forEach(person => {
                     html += `<div style="color:${person.color}">${person.name}</div>`;
@@ -344,7 +271,6 @@
             strip.innerHTML = html;
             strip.style.transition = 'none';
             strip.style.transform = `translateY(${CENTER_OFFSET}px)`;
-            
             document.getElementById('spin-btn').disabled = false;
         }
 
@@ -352,8 +278,6 @@
             if(isSpinning || currentPool.length === 0) return;
             isSpinning = true;
             document.getElementById('spin-btn').disabled = true;
-            
-            // 1. Enter Cinema Mode
             document.body.classList.add('spinning');
             
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -361,26 +285,18 @@
             const strip = document.getElementById('strip');
             const winnerIndex = Math.floor(Math.random() * currentPool.length);
             const winner = currentPool[winnerIndex];
-
-            // Target deep in the list (50th repetition)
             const targetIndex = (50 * currentPool.length) + winnerIndex;
             const offset = -(targetIndex * ITEM_HEIGHT) + CENTER_OFFSET;
 
-            let count = 0;
-            const totalTicks = 60;
-            
+            let count = 0; const totalTicks = 60;
             let tickInterval = setInterval(() => {
                 count++;
-                const intensity = count / totalTicks; // 0.0 to 1.0
+                const intensity = count / totalTicks;
                 playTick(intensity);
-
-                // 2. Red Alert near end
                 if(count === 50) document.body.classList.add('red-alert');
-
                 if(count >= totalTicks) clearInterval(tickInterval); 
-            }, 80); // Fast ticks
+            }, 80);
 
-            // Spin animation (5s)
             strip.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.2, 1)';
             strip.style.transform = `translateY(${offset}px)`;
 
@@ -390,20 +306,14 @@
         }
 
         function handleWin(winner, index) {
-            // 3. Audio Explosion
             playBoom();
-            
-            // 4. Modal Takeover
             const modal = document.getElementById('winner-modal');
             const nameEl = document.getElementById('winner-name');
             nameEl.innerText = winner.name;
             nameEl.style.color = winner.color;
             nameEl.style.textShadow = `0 0 50px ${winner.color}`;
-            
-            modal.style.display = 'flex'; // Boom.
-
+            modal.style.display = 'flex';
             fireConfetti(winner.color);
-            
             currentPool.splice(index, 1);
             addToHistory(winner);
         }
@@ -437,25 +347,19 @@
             }
         }
 
-        // --- CONFETTI ---
         function fireConfetti(hexColor) {
             const canvas = document.getElementById('confetti');
             const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             const particles = [];
-            
             for(let i=0; i<200; i++) {
                 particles.push({
                     x: canvas.width / 2, y: canvas.height / 2, 
-                    size: Math.random() * 10 + 5,
-                    color: hexColor, 
-                    speedX: (Math.random() - 0.5) * 40, 
-                    speedY: (Math.random() - 0.5) * 40,
+                    size: Math.random() * 10 + 5, color: hexColor, 
+                    speedX: (Math.random() - 0.5) * 40, speedY: (Math.random() - 0.5) * 40,
                     gravity: 0.25, angle: Math.random() * 6.2
                 });
             }
-
             let frame = 0;
             function animate() {
                 ctx.clearRect(0,0, canvas.width, canvas.height);
