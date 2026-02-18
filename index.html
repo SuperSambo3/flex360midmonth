@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MidMonth Meeting Randomizer</title>
+    <style>
+        body {
+            background-color: #1e1e1e; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-weight: 300;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1rem;
+        }
+
+        /* --- THE WHEEL --- */
+        .wheel-container {
+            position: relative;
+            margin-bottom: 40px;
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+        }
+
+        .window {
+            height: 120px; 
+            width: 400px;
+            max-width: 90vw;
+            background: #000;
+            border: 4px solid #444;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* The red line indicator */
+        .indicator {
+            position: absolute;
+            top: 50%;
+            left: -10px;
+            right: -10px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 10;
+            pointer-events: none;
+            margin-top: -2px;
+        }
+
+        .strip {
+            width: 100%;
+            transform: translateY(0px); 
+            will-change: transform;
+        }
+
+        .strip div {
+            height: 120px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            border-bottom: 1px solid #222;
+            box-sizing: border-box;
+            text-shadow: 0 2px 0 rgba(0,0,0,0.5);
+        }
+
+        /* --- CONTROLS --- */
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        button:active { transform: translateY(2px); }
+
+        #spin-btn {
+            background: #ffffff;
+            color: #000;
+            box-shadow: 0 4px 0 #999;
+        }
+
+        #reset-btn {
+            background: #333;
+            color: #fff;
+            box-shadow: 0 4px 0 #111;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- HISTORY LIST --- */
+        .history-section {
+            width: 100%;
+            max-width: 400px;
+            background: #252525;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .history-title {
+            color: #888;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #1e1e1e;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Confetti Canvas */
+        #confetti {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti"></canvas>
+
+    <h1>MidMonth Meeting</h1>
+    <div class="subtitle">Who is presenting next?</div>
+
+    <div class="wheel-container">
+        <div class="window">
+            <div class="indicator"></div>
+            <div class="strip" id="strip"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="spin-btn" onclick="spin()">Spin Wheel</button>
+        <button id="reset-btn" onclick="resetAll()">Reset</button>
+    </div>
+
+    <div class="history-section">
+        <div class="history-title">Presentation Order</div>
+        <div class="history-list" id="history">
+            <div style="color:#555; font-style:italic;">No one has presented yet...</div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // Definition of the team members and their specific colors
+        const fullTeam = [
+            { name: "Sam", color: "#f3af19" },       // Yellow
+            { name: "Anna", color: "#ff4444" },      // Red
+            { name: "Abby", color: "#42bff5" },      // Blue
+            { name: "Liz", color: "#98ff98" },       // Mint Green
+            { name: "Elizabeth", color: "#ff69b4" }  // Pink
+        ];
+
+        // State variables
+        let currentPool = [...fullTeam]; // Copy of team
+        let isSpinning = false;
+        const HEIGHT = 120; // Height of one item in pixels
+
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTick() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime); // Lower pitch for business feel
+            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        function playFanfare() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            // Simple major chord
+            [440, 554, 659, 880].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = freq;
+                const startTime = now + (i * 0.1);
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.1, startTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + 2);
+            });
+        }
+
+        // --- LOGIC ---
+
+        function initWheel() {
+            const strip = document.getElementById('strip');
+            let html = "";
+            
+            // If empty
+            if(currentPool.length === 0) {
+                strip.innerHTML = "<div style='color:white'>ALL DONE!</div>";
+                document.getElementById('spin-btn').disabled = true;
+                return;
+            }
+
+            // Create visual strip
+            // We repeat the list 40 times to create the scroll effect
+            for(let i=0; i<40; i++) {
+                currentPool.forEach(person => {
+                    html += `<div style="color:${person.color}">${person.name}</div>`;
+                });
+            }
+            strip.innerHTML = html;
+            
+            // Reset position
+            strip.style.transition = 'none';
+            strip.style.transform = 'translateY(0px)';
+            document.getElementById('spin-btn').disabled = false;
+        }
+
+        function spin() {
+            if(isSpinning || currentPool.length === 0) return;
+            isSpinning = true;
+            document.getElementById('spin-btn').disabled = true;
+
+            // Audio wake up
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const strip = document.getElementById('strip');
+            
+            // 1. Pick Winner
+            const winnerIndex = Math.floor(Math.random() * currentPool.length);
+            const winner = currentPool[winnerIndex];
+
+            // 2. Calculate Math
+            // Land on the 30th repetition
+            const targetIndex = (30 * currentPool.length) + winnerIndex;
+            const offset = -(targetIndex * HEIGHT);
+
+            // 3. Audio Ticking Loop
+            let count = 0;
+            let tickInterval = setInterval(() => {
+                playTick();
+                count++;
+                if(count > 40) clearInterval(tickInterval); 
+            }, 80);
+
+            // 4. Animate
+            strip.style.transition = 'transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+            strip.style.transform = `translateY(${offset}px)`;
+
+            // 5. Cleanup after spin
+            setTimeout(() => {
+                handleWin(winner, winnerIndex);
+            }, 4000);
+        }
+
+        function handleWin(winner, index) {
+            playFanfare();
+            fireConfetti(winner.color);
+            
+            // Remove from pool
+            currentPool.splice(index, 1);
+            
+            // Add to history
+            addToHistory(winner);
+
+            // Wait a moment for celebration, then reset wheel for next person
+            setTimeout(() => {
+                isSpinning = false;
+                initWheel(); // Re-renders wheel without the winner
+            }, 2000);
+        }
+
+        function addToHistory(person) {
+            const list = document.getElementById('history');
+            // Remove "empty" text if it exists
+            if(list.innerText.includes("No one")) list.innerHTML = "";
+
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <span style="color:${person.color}; font-weight:bold;">${person.name}</span>
+                <span style="color:#555;">✓</span>
+            `;
+            list.appendChild(div);
+        }
+
+        function resetAll() {
+            if(confirm("Start a new meeting? This will reset the order.")) {
+                currentPool = [...fullTeam];
+                document.getElementById('history').innerHTML = "<div style='color:#555; font-style:italic;'>No one has presented yet...</div>";
+                initWheel();
+                isSpinning = false;
+            }
+        }
+
+        // --- CONFETTI ---
+        function fireConfetti(hexColor) {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2, // burst from center
+                    size: Math.random() * 8 + 4,
+                    color: hexColor, // Use the winner's color
+                    speedX: (Math.random() - 0.5) * 20,
+                    speedY: (Math.random() - 0.5) * 20,
+                    gravity: 0.2,
+                    angle: Math.random() * 6.2
+                });
+            }
+
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                let active = false;
+                particles.forEach(p => {
+                    p.speedY += p.gravity;
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.speedX *= 0.95; 
+                    p.speedY *= 0.95;
+
+                    if(p.y < canvas.height && p.x > 0 && p.x < canvas.width) {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.size, p.size);
+                        active = true;
+                    }
+                });
+                frame++;
+                if(active && frame < 200) requestAnimationFrame(animate);
+                else ctx.clearRect(0,0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        // Initialize
+        window.onload = initWheel;
+
+    </script>
+</body>
+</html>
