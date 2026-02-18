@@ -17,13 +17,10 @@
             padding: 20px;
             user-select: none;
             transition: background-color 0.5s ease;
-            overflow-x: hidden; /* Prevent scrollbars during shake */
+            overflow-x: hidden;
         }
 
-        /* Focus Mode: Darken background when spinning */
-        body.spinning {
-            background-color: #050505;
-        }
+        body.spinning { background-color: #050505; }
 
         h1 {
             color: #ffffff;
@@ -38,17 +35,12 @@
         .subtitle {
             color: #888;
             margin-bottom: 40px;
-            font-size: 1.2rem; /* Larger text */
-            height: 30px; /* Fixed height to prevent jumping */
+            font-size: 1.2rem;
+            height: 30px;
             transition: color 0.3s;
         }
         
-        /* Hype Text Styling */
-        .subtitle.hype {
-            color: #f3af19;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
+        .subtitle.hype { color: #f3af19; font-weight: bold; letter-spacing: 1px; }
 
         /* --- THE WHEEL --- */
         .wheel-container {
@@ -75,7 +67,6 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Heartbeat Animation for the Wheel */
         body.spinning .window {
             border-color: #fff;
             box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
@@ -88,10 +79,7 @@
             100% { transform: scale(1); box-shadow: 0 0 30px rgba(255,255,255,0.2); }
         }
 
-        /* Screen Shake Animation */
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
 
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -100,7 +88,6 @@
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
-        /* Pointers */
         .pointer-left, .pointer-right {
             position: absolute;
             top: 50%;
@@ -116,7 +103,6 @@
         .pointer-left { left: -20px; border-left: 20px solid #fff; }
         .pointer-right { right: -20px; border-right: 20px solid #fff; }
 
-        /* Pointers pinch in when spinning */
         body.spinning .pointer-left { transform: translateY(-50%) translateX(-10px); }
         body.spinning .pointer-right { transform: translateY(-50%) translateX(10px); }
 
@@ -147,11 +133,7 @@
             transition: opacity 0.3s;
         }
         
-        /* Hide controls while spinning for cinema mode */
-        body.spinning .controls {
-            opacity: 0.3;
-            pointer-events: none;
-        }
+        body.spinning .controls { opacity: 0.3; pointer-events: none; }
 
         button {
             padding: 15px 40px;
@@ -165,43 +147,30 @@
         }
 
         button:active { transform: translateY(2px); }
-
         #spin-btn { background: #ffffff; color: #000; box-shadow: 0 4px 0 #999; }
         #reset-btn { background: #333; color: #fff; box-shadow: 0 4px 0 #111; }
         button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
         /* --- HISTORY --- */
         .history-section {
-            width: 100%;
-            max-width: 400px;
-            background: #252525;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #333;
+            width: 100%; max-width: 400px;
+            background: #252525; padding: 20px;
+            border-radius: 12px; border: 1px solid #333;
         }
-
         .history-title {
-            color: #888;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #333;
+            color: #888; font-size: 0.9rem;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 15px; border-bottom: 1px solid #333;
             padding-bottom: 10px;
         }
-
         .history-list { display: flex; flex-direction: column; gap: 10px; }
-
         .history-item {
             display: flex; justify-content: space-between; padding: 10px;
             background: #1e1e1e; border-radius: 6px; font-size: 1.1rem;
             animation: fadeIn 0.5s ease;
         }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
-
     </style>
 </head>
 <body>
@@ -254,7 +223,6 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'square';
-            // Pitch rises slightly as it gets faster/more intense
             osc.frequency.setValueAtTime(100 + (speed * 2), audioCtx.currentTime); 
             osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
             gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
@@ -268,7 +236,6 @@
         function playFanfare() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            // Epic chord
             [261.6, 329.6, 392.0, 523.2].forEach((freq, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -308,45 +275,43 @@
             
             document.getElementById('spin-btn').disabled = false;
             document.body.classList.remove('spinning');
-            document.getElementById('status-text').innerText = "Who is presenting next?";
-            document.getElementById('status-text').classList.remove('hype');
+            
+            // Force browser to accept the new position immediately
+            void strip.offsetWidth;
         }
 
         function spin() {
             if(isSpinning || currentPool.length === 0) return;
-            isSpinning = true;
-            document.getElementById('spin-btn').disabled = true;
-            
-            // ACTIVATE FOCUS MODE
-            document.body.classList.add('spinning');
+
+            // RESET STEP: 
+            // If we are looking at a previous winner, this instantly snaps the wheel 
+            // back to the starting line with the *new* (shorter) list of names.
+            initWheel();
             updateStatus("Here we go...", true);
 
+            isSpinning = true;
+            document.getElementById('spin-btn').disabled = true;
+            document.body.classList.add('spinning');
+            
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const strip = document.getElementById('strip');
             const winnerIndex = Math.floor(Math.random() * currentPool.length);
             const winner = currentPool[winnerIndex];
 
-            // Deep target
             const targetIndex = (40 * currentPool.length) + winnerIndex;
             const offset = -(targetIndex * ITEM_HEIGHT) + CENTER_OFFSET;
 
-            // Audio & Text Logic
             let count = 0;
             let tickInterval = setInterval(() => {
                 playTick(count);
                 count++;
-                
-                // Dynamic Text Updates based on tick count
                 if(count === 10) updateStatus("Spinning...");
                 if(count === 25) updateStatus("Who will it be??");
                 if(count === 40) updateStatus("Slowing down...");
-                if(count === 50) updateStatus("Is it you??");
-
                 if(count > 60) clearInterval(tickInterval); 
             }, 80);
 
-            // Spin animation (5 seconds long now)
             strip.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.2, 1)';
             strip.style.transform = `translateY(${offset}px)`;
 
@@ -363,22 +328,24 @@
         }
 
         function handleWin(winner, index) {
-            // THE IMPACT
             updateStatus(winner.name.toUpperCase() + "!", true);
-            
-            // Screen Shake
             document.body.classList.add('shake');
             setTimeout(() => document.body.classList.remove('shake'), 500);
 
             playFanfare();
             fireConfetti(winner.color);
+            
+            // Remove from data immediately, but keep Visuals on screen
             currentPool.splice(index, 1);
             addToHistory(winner);
             
+            // Re-enable the button so they can click again, 
+            // but DO NOT reset the wheel visuals yet.
             setTimeout(() => {
                 isSpinning = false;
-                initWheel(); 
-            }, 3000);
+                document.getElementById('spin-btn').disabled = false;
+                // Leave the winner text and confetti until they click again
+            }, 1000);
         }
 
         function addToHistory(person) {
@@ -400,10 +367,10 @@
                 document.getElementById('history').innerHTML = "<div style='color:#555; font-style:italic;'>No one has presented yet...</div>";
                 initWheel();
                 isSpinning = false;
+                updateStatus("Who is presenting next?");
             }
         }
 
-        // --- CONFETTI ---
         function fireConfetti(hexColor) {
             const canvas = document.getElementById('confetti');
             const ctx = canvas.getContext('2d');
@@ -411,14 +378,13 @@
             canvas.height = window.innerHeight;
 
             const particles = [];
-            
             for(let i=0; i<150; i++) {
                 particles.push({
                     x: canvas.width / 2,
                     y: canvas.height / 2, 
                     size: Math.random() * 10 + 5,
                     color: hexColor, 
-                    speedX: (Math.random() - 0.5) * 30, // Faster explosion
+                    speedX: (Math.random() - 0.5) * 30,
                     speedY: (Math.random() - 0.5) * 30,
                     gravity: 0.25,
                     angle: Math.random() * 6.2
@@ -443,7 +409,7 @@
                     }
                 });
                 frame++;
-                if(active && frame < 200) requestAnimationFrame(animate);
+                if(active && frame < 300) requestAnimationFrame(animate); // Longer confetti time
                 else ctx.clearRect(0,0, canvas.width, canvas.height);
             }
             animate();
