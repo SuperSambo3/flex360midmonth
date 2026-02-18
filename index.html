@@ -58,7 +58,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 20px; /* Space between cupids and wheel */
+            gap: 20px;
             margin-bottom: 40px;
             position: relative;
             z-index: 10;
@@ -68,14 +68,14 @@
 
         /* CUPID IMAGES */
         .cupid-img {
-            width: 200px; /* Adjust size matches screenshot */
+            width: 200px; 
             height: auto;
             filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
             animation: float 3s ease-in-out infinite;
         }
 
         .cupid-right {
-            transform: scaleX(-1); /* Flips the image to face center */
+            transform: scaleX(-1); /* Flips the image */
         }
 
         @keyframes float {
@@ -84,7 +84,6 @@
             100% { transform: translateY(0px) scaleX(1); }
         }
         
-        /* Special animation for the right cupid to keep the flip */
         @keyframes floatRight {
             0% { transform: translateY(0px) scaleX(-1); }
             50% { transform: translateY(-10px) scaleX(-1); }
@@ -98,7 +97,7 @@
             position: relative;
             transition: transform 1s cubic-bezier(0.1, 0.9, 0.2, 1);
             filter: drop-shadow(0 0 30px rgba(0,0,0,0.8));
-            flex-shrink: 0; /* Prevents wheel from getting squished */
+            flex-shrink: 0; 
         }
 
         body.spinning .wheel-container { transform: scale(1.1); }
@@ -179,13 +178,8 @@
         
         #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
 
-        /* Mobile Responsive: Hide cupids on very small screens so they don't break layout */
-        @media (max-width: 800px) {
-            .cupid-img { width: 100px; }
-        }
-        @media (max-width: 600px) {
-            .cupid-img { display: none; }
-        }
+        @media (max-width: 800px) { .cupid-img { width: 100px; } }
+        @media (max-width: 600px) { .cupid-img { display: none; } }
     </style>
 </head>
 <body>
@@ -242,6 +236,7 @@
         const ITEM_HEIGHT = 120; 
         const CENTER_OFFSET = 60; 
 
+        // --- AUDIO ENGINE (Volume Boosted) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playTick(intensity) {
@@ -252,8 +247,11 @@
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            
+            // Volume increased from 0.05 to 0.1
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            
             const filter = audioCtx.createBiquadFilter();
             filter.type = 'lowpass';
             filter.frequency.value = 1000 + (intensity * 2000);
@@ -264,15 +262,20 @@
         function playBoom() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
+            
+            // Boom Osc
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(0.01, now + 1.5);
-            gain.gain.setValueAtTime(0.5, now);
+            
+            // Volume increased to 0.8
+            gain.gain.setValueAtTime(0.8, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(now); osc.stop(now + 1.5);
 
+            // Chord
             [261.6, 329.6, 392.0, 523.2, 783.9].forEach((freq, i) => {
                 const osc2 = audioCtx.createOscillator();
                 const gain2 = audioCtx.createGain();
@@ -280,7 +283,7 @@
                 osc2.frequency.value = freq;
                 const start = now + 0.1 + (i * 0.05);
                 gain2.gain.setValueAtTime(0, start);
-                gain2.gain.linearRampToValueAtTime(0.1, start + 0.1);
+                gain2.gain.linearRampToValueAtTime(0.2, start + 0.1);
                 gain2.gain.exponentialRampToValueAtTime(0.001, start + 3);
                 osc2.connect(gain2); gain2.connect(audioCtx.destination);
                 osc2.start(start); osc2.stop(start + 3);
@@ -312,6 +315,7 @@
             document.getElementById('spin-btn').disabled = true;
             document.body.classList.add('spinning');
             
+            // FORCE AUDIO START
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const strip = document.getElementById('strip');
