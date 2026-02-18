@@ -16,6 +16,13 @@
             margin: 0;
             padding: 20px;
             user-select: none;
+            transition: background-color 0.5s ease;
+            overflow-x: hidden; /* Prevent scrollbars during shake */
+        }
+
+        /* Focus Mode: Darken background when spinning */
+        body.spinning {
+            background-color: #050505;
         }
 
         h1 {
@@ -25,23 +32,32 @@
             margin-bottom: 10px;
             text-align: center;
             letter-spacing: 2px;
+            transition: opacity 0.3s;
         }
 
         .subtitle {
             color: #888;
             margin-bottom: 40px;
-            font-size: 1rem;
+            font-size: 1.2rem; /* Larger text */
+            height: 30px; /* Fixed height to prevent jumping */
+            transition: color 0.3s;
+        }
+        
+        /* Hype Text Styling */
+        .subtitle.hype {
+            color: #f3af19;
+            font-weight: bold;
+            letter-spacing: 1px;
         }
 
         /* --- THE WHEEL --- */
         .wheel-container {
             position: relative;
             margin-bottom: 40px;
-            filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
         }
 
         .window {
-            /* Taller window to show 1 full name + 2 halves */
             height: 240px; 
             width: 400px;
             max-width: 90vw;
@@ -53,12 +69,38 @@
             display: flex;
             justify-content: center;
             
-            /* The Magic Fade Effect */
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        /* Side Pointers (Arrows) */
+        /* Heartbeat Animation for the Wheel */
+        body.spinning .window {
+            border-color: #fff;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            animation: heartbeat 1s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); box-shadow: 0 0 30px rgba(255,255,255,0.2); }
+            50% { transform: scale(1.02); box-shadow: 0 0 50px rgba(255,255,255,0.5); }
+            100% { transform: scale(1); box-shadow: 0 0 30px rgba(255,255,255,0.2); }
+        }
+
+        /* Screen Shake Animation */
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Pointers */
         .pointer-left, .pointer-right {
             position: absolute;
             top: 50%;
@@ -68,17 +110,15 @@
             border-top: 15px solid transparent;
             border-bottom: 15px solid transparent;
             z-index: 20;
+            transition: transform 0.3s;
         }
 
-        .pointer-left {
-            left: -20px;
-            border-left: 20px solid #fff;
-        }
+        .pointer-left { left: -20px; border-left: 20px solid #fff; }
+        .pointer-right { right: -20px; border-right: 20px solid #fff; }
 
-        .pointer-right {
-            right: -20px;
-            border-right: 20px solid #fff;
-        }
+        /* Pointers pinch in when spinning */
+        body.spinning .pointer-left { transform: translateY(-50%) translateX(-10px); }
+        body.spinning .pointer-right { transform: translateY(-50%) translateX(10px); }
 
         .strip {
             width: 100%;
@@ -95,7 +135,6 @@
             font-weight: bold;
             text-align: center;
             width: 100%;
-            /* Removed border-bottom for cleaner look */
             box-sizing: border-box;
             text-shadow: 0 2px 0 rgba(0,0,0,0.5);
         }
@@ -105,6 +144,13 @@
             display: flex;
             gap: 20px;
             margin-bottom: 40px;
+            transition: opacity 0.3s;
+        }
+        
+        /* Hide controls while spinning for cinema mode */
+        body.spinning .controls {
+            opacity: 0.3;
+            pointer-events: none;
         }
 
         button {
@@ -120,26 +166,11 @@
 
         button:active { transform: translateY(2px); }
 
-        #spin-btn {
-            background: #ffffff;
-            color: #000;
-            box-shadow: 0 4px 0 #999;
-        }
+        #spin-btn { background: #ffffff; color: #000; box-shadow: 0 4px 0 #999; }
+        #reset-btn { background: #333; color: #fff; box-shadow: 0 4px 0 #111; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        #reset-btn {
-            background: #333;
-            color: #fff;
-            box-shadow: 0 4px 0 #111;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* --- HISTORY LIST --- */
+        /* --- HISTORY --- */
         .history-section {
             width: 100%;
             max-width: 400px;
@@ -159,35 +190,17 @@
             padding-bottom: 10px;
         }
 
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .history-list { display: flex; flex-direction: column; gap: 10px; }
 
         .history-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background: #1e1e1e;
-            border-radius: 6px;
-            font-size: 1.1rem;
+            display: flex; justify-content: space-between; padding: 10px;
+            background: #1e1e1e; border-radius: 6px; font-size: 1.1rem;
             animation: fadeIn 0.5s ease;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Confetti Canvas */
-        #confetti {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 100;
-        }
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
 
     </style>
 </head>
@@ -196,12 +209,11 @@
     <canvas id="confetti"></canvas>
 
     <h1>MidMonth Meeting</h1>
-    <div class="subtitle">Who is presenting next?</div>
+    <div class="subtitle" id="status-text">Who is presenting next?</div>
 
-    <div class="wheel-container">
+    <div class="wheel-container" id="main-wheel">
         <div class="pointer-left"></div>
         <div class="pointer-right"></div>
-        
         <div class="window">
             <div class="strip" id="strip"></div>
         </div>
@@ -229,26 +241,21 @@
             { name: "Elizabeth", color: "#ff69b4" }  // Pink
         ];
 
-        // State variables
         let currentPool = [...fullTeam]; 
         let isSpinning = false;
-        
-        // SIZING VARIABLES
         const ITEM_HEIGHT = 120; 
-        const WINDOW_HEIGHT = 240; 
-        // We calculate the offset to center the item: 
-        // (Window Height - Item Height) / 2 = (240 - 120) / 2 = 60px
         const CENTER_OFFSET = 60; 
 
         // --- AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        function playTick() {
+        function playTick(speed) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'square';
-            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            // Pitch rises slightly as it gets faster/more intense
+            osc.frequency.setValueAtTime(100 + (speed * 2), audioCtx.currentTime); 
             osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
             gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
@@ -261,19 +268,20 @@
         function playFanfare() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            [440, 554, 659, 880].forEach((freq, i) => {
+            // Epic chord
+            [261.6, 329.6, 392.0, 523.2].forEach((freq, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'triangle';
                 osc.frequency.value = freq;
-                const startTime = now + (i * 0.1);
+                const startTime = now + (i * 0.05);
                 gain.gain.setValueAtTime(0, startTime);
-                gain.gain.linearRampToValueAtTime(0.1, startTime + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2);
+                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 3);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start(startTime);
-                osc.stop(startTime + 2);
+                osc.stop(startTime + 3);
             });
         }
 
@@ -289,28 +297,29 @@
                 return;
             }
 
-            // Create massive list for scrolling
-            // We use 50 repetitions to ensure plenty of scroll room
             for(let i=0; i<50; i++) {
                 currentPool.forEach(person => {
                     html += `<div style="color:${person.color}">${person.name}</div>`;
                 });
             }
             strip.innerHTML = html;
-            
-            // Set initial position
-            // We want to start centered on the first item of a middle set
-            // Let's start at index 0, but offset by CENTER_OFFSET so it sits in the middle
             strip.style.transition = 'none';
             strip.style.transform = `translateY(${CENTER_OFFSET}px)`;
             
             document.getElementById('spin-btn').disabled = false;
+            document.body.classList.remove('spinning');
+            document.getElementById('status-text').innerText = "Who is presenting next?";
+            document.getElementById('status-text').classList.remove('hype');
         }
 
         function spin() {
             if(isSpinning || currentPool.length === 0) return;
             isSpinning = true;
             document.getElementById('spin-btn').disabled = true;
+            
+            // ACTIVATE FOCUS MODE
+            document.body.classList.add('spinning');
+            updateStatus("Here we go...", true);
 
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
@@ -318,41 +327,58 @@
             const winnerIndex = Math.floor(Math.random() * currentPool.length);
             const winner = currentPool[winnerIndex];
 
-            // Target the 35th repetition (deep in the list)
-            const targetIndex = (35 * currentPool.length) + winnerIndex;
-            
-            // MATH: 
-            // - (Index * Height) moves the top of the item to the top of the window
-            // + CENTER_OFFSET moves the item down to the middle of the window
+            // Deep target
+            const targetIndex = (40 * currentPool.length) + winnerIndex;
             const offset = -(targetIndex * ITEM_HEIGHT) + CENTER_OFFSET;
 
+            // Audio & Text Logic
             let count = 0;
             let tickInterval = setInterval(() => {
-                playTick();
+                playTick(count);
                 count++;
-                if(count > 50) clearInterval(tickInterval); 
+                
+                // Dynamic Text Updates based on tick count
+                if(count === 10) updateStatus("Spinning...");
+                if(count === 25) updateStatus("Who will it be??");
+                if(count === 40) updateStatus("Slowing down...");
+                if(count === 50) updateStatus("Is it you??");
+
+                if(count > 60) clearInterval(tickInterval); 
             }, 80);
 
-            // Spin for 4.5 seconds
-            strip.style.transition = 'transform 4.5s cubic-bezier(0.1, 0.9, 0.2, 1)';
+            // Spin animation (5 seconds long now)
+            strip.style.transition = 'transform 5s cubic-bezier(0.1, 0.9, 0.2, 1)';
             strip.style.transform = `translateY(${offset}px)`;
 
             setTimeout(() => {
                 handleWin(winner, winnerIndex);
-            }, 4500);
+            }, 5000);
+        }
+
+        function updateStatus(text, isHype = false) {
+            const el = document.getElementById('status-text');
+            el.innerText = text;
+            if(isHype) el.classList.add('hype');
+            else el.classList.remove('hype');
         }
 
         function handleWin(winner, index) {
+            // THE IMPACT
+            updateStatus(winner.name.toUpperCase() + "!", true);
+            
+            // Screen Shake
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+
             playFanfare();
             fireConfetti(winner.color);
             currentPool.splice(index, 1);
             addToHistory(winner);
             
-            // Wait, then reset
             setTimeout(() => {
                 isSpinning = false;
                 initWheel(); 
-            }, 2500);
+            }, 3000);
         }
 
         function addToHistory(person) {
@@ -386,15 +412,15 @@
 
             const particles = [];
             
-            for(let i=0; i<100; i++) {
+            for(let i=0; i<150; i++) {
                 particles.push({
                     x: canvas.width / 2,
                     y: canvas.height / 2, 
-                    size: Math.random() * 8 + 4,
+                    size: Math.random() * 10 + 5,
                     color: hexColor, 
-                    speedX: (Math.random() - 0.5) * 20,
-                    speedY: (Math.random() - 0.5) * 20,
-                    gravity: 0.2,
+                    speedX: (Math.random() - 0.5) * 30, // Faster explosion
+                    speedY: (Math.random() - 0.5) * 30,
+                    gravity: 0.25,
                     angle: Math.random() * 6.2
                 });
             }
@@ -407,8 +433,8 @@
                     p.speedY += p.gravity;
                     p.x += p.speedX;
                     p.y += p.speedY;
-                    p.speedX *= 0.95; 
-                    p.speedY *= 0.95;
+                    p.speedX *= 0.94; 
+                    p.speedY *= 0.94;
 
                     if(p.y < canvas.height && p.x > 0 && p.x < canvas.width) {
                         ctx.fillStyle = p.color;
