@@ -41,7 +41,8 @@
         }
 
         .window {
-            height: 120px; 
+            /* Taller window to show 1 full name + 2 halves */
+            height: 240px; 
             width: 400px;
             max-width: 90vw;
             background: #000;
@@ -51,19 +52,32 @@
             position: relative;
             display: flex;
             justify-content: center;
+            
+            /* The Magic Fade Effect */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
         }
 
-        /* The red line indicator */
-        .indicator {
+        /* Side Pointers (Arrows) */
+        .pointer-left, .pointer-right {
             position: absolute;
             top: 50%;
-            left: -10px;
-            right: -10px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            z-index: 10;
-            pointer-events: none;
-            margin-top: -2px;
+            transform: translateY(-50%);
+            width: 0; 
+            height: 0; 
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            z-index: 20;
+        }
+
+        .pointer-left {
+            left: -20px;
+            border-left: 20px solid #fff;
+        }
+
+        .pointer-right {
+            right: -20px;
+            border-right: 20px solid #fff;
         }
 
         .strip {
@@ -81,7 +95,7 @@
             font-weight: bold;
             text-align: center;
             width: 100%;
-            border-bottom: 1px solid #222;
+            /* Removed border-bottom for cleaner look */
             box-sizing: border-box;
             text-shadow: 0 2px 0 rgba(0,0,0,0.5);
         }
@@ -185,8 +199,10 @@
     <div class="subtitle">Who is presenting next?</div>
 
     <div class="wheel-container">
+        <div class="pointer-left"></div>
+        <div class="pointer-right"></div>
+        
         <div class="window">
-            <div class="indicator"></div>
             <div class="strip" id="strip"></div>
         </div>
     </div>
@@ -205,7 +221,6 @@
 
     <script>
         // --- CONFIGURATION ---
-        // Definition of the team members and their specific colors
         const fullTeam = [
             { name: "Sam", color: "#f3af19" },       // Yellow
             { name: "Anna", color: "#ff4444" },      // Red
@@ -215,9 +230,15 @@
         ];
 
         // State variables
-        let currentPool = [...fullTeam]; // Copy of team
+        let currentPool = [...fullTeam]; 
         let isSpinning = false;
-        const HEIGHT = 120; // Height of one item in pixels
+        
+        // SIZING VARIABLES
+        const ITEM_HEIGHT = 120; 
+        const WINDOW_HEIGHT = 240; 
+        // We calculate the offset to center the item: 
+        // (Window Height - Item Height) / 2 = (240 - 120) / 2 = 60px
+        const CENTER_OFFSET = 60; 
 
         // --- AUDIO ENGINE ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -227,7 +248,7 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'square';
-            osc.frequency.setValueAtTime(100, audioCtx.currentTime); // Lower pitch for business feel
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
             osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
             gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
@@ -240,7 +261,6 @@
         function playFanfare() {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const now = audioCtx.currentTime;
-            // Simple major chord
             [440, 554, 659, 880].forEach((freq, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -263,25 +283,27 @@
             const strip = document.getElementById('strip');
             let html = "";
             
-            // If empty
             if(currentPool.length === 0) {
-                strip.innerHTML = "<div style='color:white'>ALL DONE!</div>";
+                strip.innerHTML = "<div style='height:240px; display:flex; align-items:center; justify-content:center; color:white;'>ALL DONE!</div>";
                 document.getElementById('spin-btn').disabled = true;
                 return;
             }
 
-            // Create visual strip
-            // We repeat the list 40 times to create the scroll effect
-            for(let i=0; i<40; i++) {
+            // Create massive list for scrolling
+            // We use 50 repetitions to ensure plenty of scroll room
+            for(let i=0; i<50; i++) {
                 currentPool.forEach(person => {
                     html += `<div style="color:${person.color}">${person.name}</div>`;
                 });
             }
             strip.innerHTML = html;
             
-            // Reset position
+            // Set initial position
+            // We want to start centered on the first item of a middle set
+            // Let's start at index 0, but offset by CENTER_OFFSET so it sits in the middle
             strip.style.transition = 'none';
-            strip.style.transform = 'translateY(0px)';
+            strip.style.transform = `translateY(${CENTER_OFFSET}px)`;
+            
             document.getElementById('spin-btn').disabled = false;
         }
 
@@ -290,58 +312,51 @@
             isSpinning = true;
             document.getElementById('spin-btn').disabled = true;
 
-            // Audio wake up
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const strip = document.getElementById('strip');
-            
-            // 1. Pick Winner
             const winnerIndex = Math.floor(Math.random() * currentPool.length);
             const winner = currentPool[winnerIndex];
 
-            // 2. Calculate Math
-            // Land on the 30th repetition
-            const targetIndex = (30 * currentPool.length) + winnerIndex;
-            const offset = -(targetIndex * HEIGHT);
+            // Target the 35th repetition (deep in the list)
+            const targetIndex = (35 * currentPool.length) + winnerIndex;
+            
+            // MATH: 
+            // - (Index * Height) moves the top of the item to the top of the window
+            // + CENTER_OFFSET moves the item down to the middle of the window
+            const offset = -(targetIndex * ITEM_HEIGHT) + CENTER_OFFSET;
 
-            // 3. Audio Ticking Loop
             let count = 0;
             let tickInterval = setInterval(() => {
                 playTick();
                 count++;
-                if(count > 40) clearInterval(tickInterval); 
+                if(count > 50) clearInterval(tickInterval); 
             }, 80);
 
-            // 4. Animate
-            strip.style.transition = 'transform 4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+            // Spin for 4.5 seconds
+            strip.style.transition = 'transform 4.5s cubic-bezier(0.1, 0.9, 0.2, 1)';
             strip.style.transform = `translateY(${offset}px)`;
 
-            // 5. Cleanup after spin
             setTimeout(() => {
                 handleWin(winner, winnerIndex);
-            }, 4000);
+            }, 4500);
         }
 
         function handleWin(winner, index) {
             playFanfare();
             fireConfetti(winner.color);
-            
-            // Remove from pool
             currentPool.splice(index, 1);
-            
-            // Add to history
             addToHistory(winner);
-
-            // Wait a moment for celebration, then reset wheel for next person
+            
+            // Wait, then reset
             setTimeout(() => {
                 isSpinning = false;
-                initWheel(); // Re-renders wheel without the winner
-            }, 2000);
+                initWheel(); 
+            }, 2500);
         }
 
         function addToHistory(person) {
             const list = document.getElementById('history');
-            // Remove "empty" text if it exists
             if(list.innerText.includes("No one")) list.innerHTML = "";
 
             const div = document.createElement('div');
@@ -374,9 +389,9 @@
             for(let i=0; i<100; i++) {
                 particles.push({
                     x: canvas.width / 2,
-                    y: canvas.height / 2, // burst from center
+                    y: canvas.height / 2, 
                     size: Math.random() * 8 + 4,
-                    color: hexColor, // Use the winner's color
+                    color: hexColor, 
                     speedX: (Math.random() - 0.5) * 20,
                     speedY: (Math.random() - 0.5) * 20,
                     gravity: 0.2,
@@ -408,7 +423,6 @@
             animate();
         }
 
-        // Initialize
         window.onload = initWheel;
 
     </script>
