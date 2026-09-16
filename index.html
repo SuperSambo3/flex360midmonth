@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MidMonth Meeting: Cupids Edition</title>
+    <title>MidMonth Meeting: Centaur Edition</title>
     <style>
         body {
             background-color: #1e1e1e; 
@@ -53,7 +53,7 @@
             z-index: 20;
         }
 
-        /* --- GAME STAGE (CUPIDS + WHEEL) --- */
+        /* --- GAME STAGE (CENTAURS + WHEEL) --- */
         .game-stage {
             display: flex;
             align-items: center;
@@ -66,15 +66,15 @@
             max-width: 1000px;
         }
 
-        /* CUPID IMAGES */
-        .cupid-img {
+        /* CENTAUR IMAGES */
+        .centaur-img {
             width: 200px; 
             height: auto;
             filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
             animation: float 3s ease-in-out infinite;
         }
 
-        .cupid-right {
+        .centaur-right {
             transform: scaleX(-1); /* Flips the image */
         }
 
@@ -89,7 +89,7 @@
             50% { transform: translateY(-10px) scaleX(-1); }
             100% { transform: translateY(0px) scaleX(-1); }
         }
-        .cupid-right { animation-name: floatRight; }
+        .centaur-right { animation-name: floatRight; }
 
 
         /* --- THE WHEEL --- */
@@ -178,8 +178,8 @@
         
         #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
 
-        @media (max-width: 800px) { .cupid-img { width: 100px; } }
-        @media (max-width: 600px) { .cupid-img { display: none; } }
+        @media (max-width: 800px) { .centaur-img { width: 100px; } }
+        @media (max-width: 600px) { .centaur-img { display: none; } }
     </style>
 </head>
 <body>
@@ -195,8 +195,9 @@
     <h1>MidMonth Meeting</h1>
     <div class="subtitle" id="status-text">Who is presenting next?</div>
 
+    <!-- GAME STAGE -->
     <div class="game-stage">
-        <img src="cupids.png" class="cupid-img cupid-left" alt="Cupid">
+        <img src="centaur.png" class="centaur-img centaur-left" alt="Centaur">
         
         <div class="wheel-container">
             <div class="pointer-left"></div>
@@ -206,7 +207,7 @@
             </div>
         </div>
 
-        <img src="cupids.png" class="cupid-img cupid-right" alt="Cupid">
+        <img src="centaur.png" class="centaur-img centaur-right" alt="Centaur">
     </div>
 
     <div class="controls">
@@ -227,8 +228,7 @@
             { name: "Sam", color: "#f3af19" },       // Yellow
             { name: "Anna", color: "#ff4444" },      // Red
             { name: "Abby", color: "#42bff5" },      // Blue
-            { name: "Liz", color: "#98ff98" },       // Mint Green
-            { name: "Elizabeth", color: "#ff69b4" }  // Pink
+            { name: "Liz", color: "#98ff98" }        // Mint Green
         ];
 
         let currentPool = [...fullTeam]; 
