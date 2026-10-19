@@ -15,8 +15,9 @@
             --prairie: #c8a25a;
             --sky-top: #f6a04d;
             --sky-bottom: #ffd89b;
-            --bills-blue: #00338d;
-            --bills-red: #c60c30;
+            --frontier-teal: #1f6f78;
+            --barn-red: #b3261e;
+            --gold: #ffd34d;
         }
 
         body {
@@ -81,17 +82,72 @@
         /* --- TYPOGRAPHY --- */
         .marquee {
             position: relative; z-index: 20;
-            background: var(--bills-blue);
-            color: #fff;
+            width: calc(100% + 40px); margin: -20px -20px 10px;
+            background: var(--hide-dark);
+            color: var(--gold);
             font-family: 'Bebas Neue', Impact, sans-serif;
             letter-spacing: 4px;
-            font-size: 1.1rem;
-            padding: 4px 18px;
-            border: 3px solid var(--bills-red);
-            border-radius: 999px;
-            margin-bottom: 8px;
-            transform: rotate(-2deg);
+            font-size: 1.2rem;
+            padding: 6px 0;
+            border-bottom: 4px solid var(--barn-red);
+            overflow: hidden; white-space: nowrap;
+        }
+        .marquee-track { display: inline-block; animation: ticker 40s linear infinite; }
+        @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* Bison cursor, obviously */
+        body, button { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ctext y='32' font-size='32'%3E%F0%9F%A6%AC%3C/text%3E%3C/svg%3E") 20 20, auto; }
+
+        /* Tumbleweeds */
+        .tumbleweed {
+            position: fixed; bottom: 30px; left: -80px; font-size: 48px; z-index: 6; pointer-events: none;
+            animation: tumble 9s linear forwards;
+        }
+        .tumbleweed span { display: inline-block; animation: roll 1s linear infinite; }
+        @keyframes tumble {
+            0% { left: -80px; transform: translateY(0); }
+            20% { transform: translateY(-40px); } 30% { transform: translateY(0); }
+            55% { transform: translateY(-25px); } 65% { transform: translateY(0); }
+            100% { left: 110vw; transform: translateY(0); }
+        }
+        @keyframes roll { to { transform: rotate(360deg); } }
+
+        /* Bison rain */
+        .raindrop {
+            position: fixed; top: -80px; z-index: 7; pointer-events: none;
+            animation: bisonFall linear forwards;
+        }
+        @keyframes bisonFall { to { transform: translateY(115vh) rotate(720deg); } }
+
+        /* Herd-o-meter */
+        .meter {
+            width: 400px; max-width: 80vw; height: 22px; margin: -10px 0 24px;
+            background: var(--hide-dark); border: 3px solid #fff3d6; border-radius: 999px;
+            overflow: hidden; position: relative; z-index: 20;
             box-shadow: 0 4px 0 var(--hide-dark);
+        }
+        .meter-fill {
+            height: 100%; width: 0%;
+            background: repeating-linear-gradient(45deg, var(--gold) 0 12px, #ff9a3c 12px 24px);
+            transition: width 0.08s linear;
+        }
+        .meter-label {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 3px; color: #fff; font-size: 0.95rem;
+            text-shadow: 0 1px 2px #000;
+        }
+
+        /* Giant charging bison on win */
+        #charge {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            z-index: 998; pointer-events: none; font-size: 120px;
+        }
+        #charge.go { display: flex; }
+        #charge.go span { animation: chargeCam 0.9s cubic-bezier(0.5, 0, 1, 0.5) forwards; }
+        @keyframes chargeCam {
+            0% { transform: scale(0.2); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: scale(18); opacity: 0.9; }
         }
 
         h1 {
@@ -222,8 +278,8 @@
         }
         button:active { transform: translateY(3px); }
         #spin-btn {
-            background: var(--bills-red); color: #fff;
-            box-shadow: 0 6px 0 #7a0620, 0 0 0 4px #fff, 0 0 0 8px var(--bills-blue);
+            background: var(--barn-red); color: #fff;
+            box-shadow: 0 6px 0 #7a0620, 0 0 0 4px #fff, 0 0 0 8px var(--frontier-teal);
             font-size: 1.7rem;
             animation: chomp 1.2s ease-in-out infinite;
         }
@@ -301,6 +357,45 @@
             margin: 10px 0; text-align: center; line-height: 1;
         }
         .modal-tag { font-family: 'Rye', Georgia, serif; color: #fff3d6; font-size: 1.3rem; text-align: center; }
+        #winner-modal > * { position: relative; z-index: 1; }
+        #winner-modal .rays {
+            position: absolute; z-index: 0; left: 50%; top: 50%; width: 220vmax; height: 220vmax;
+            margin: -110vmax 0 0 -110vmax; pointer-events: none;
+            background: repeating-conic-gradient(rgba(255,211,77,0.18) 0 10deg, transparent 10deg 20deg);
+            animation: raySpin 14s linear infinite;
+        }
+        @keyframes raySpin { to { transform: rotate(360deg); } }
+
+        /* --- LEXI: THE LEGENDARY BISONTAUR --- */
+        #lexi-reveal { display: none; flex-direction: column; align-items: center; }
+        #winner-modal.lexi #lexi-reveal { display: flex; }
+        #winner-modal.lexi .modal-bison { display: none; }
+        #winner-modal.lexi { background: radial-gradient(circle, rgba(140,90,20,0.95) 0%, rgba(43,26,14,0.98) 70%); }
+        #winner-modal.lexi .rays {
+            background: repeating-conic-gradient(rgba(255,211,77,0.45) 0 8deg, transparent 8deg 16deg);
+            animation-duration: 5s;
+        }
+        .legendary {
+            font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 8px; font-size: clamp(1.4rem, 5vw, 2.6rem);
+            background: linear-gradient(90deg, #ffd34d, #fff6c9, #ffd34d, #ff9a3c, #ffd34d);
+            background-size: 300% 100%;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: shimmer 1.5s linear infinite;
+            text-align: center;
+        }
+        @keyframes shimmer { to { background-position: 300% 0; } }
+        .centaur-img {
+            height: min(48vh, 420px); width: auto;
+            filter: drop-shadow(0 0 30px rgba(255,211,77,0.9)) drop-shadow(0 0 80px rgba(255,154,60,0.6));
+            animation: centaurGallop 1.2s cubic-bezier(0.2, 0.8, 0.3, 1.2) both, centaurBob 1.4s ease-in-out 1.2s infinite;
+        }
+        @keyframes centaurGallop {
+            0% { transform: translateX(-120vw) rotate(-10deg); }
+            70% { transform: translateX(4vw) rotate(4deg); }
+            100% { transform: translateX(0) rotate(0); }
+        }
+        @keyframes centaurBob { 50% { transform: translateY(-14px) rotate(-1.5deg); } }
+        #winner-modal.lexi #winner-name { font-size: clamp(2.5rem, 10vw, 5rem); margin: 4px 0; }
         #close-modal-btn { background: transparent; border: 3px solid var(--dust); color: var(--dust); padding: 10px 30px; margin-top: 30px; font-size: 1.3rem; }
 
         #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
@@ -319,15 +414,22 @@
     <canvas id="confetti"></canvas>
     <div id="stampede"></div>
 
+    <div id="charge"><span>🦬</span></div>
+
     <div id="winner-modal">
-        <div class="modal-kicker">🦬 THE HERD HAS SPOKEN 🦬</div>
+        <div class="rays"></div>
+        <div class="modal-kicker" id="modal-kicker">🦬 THE HERD HAS SPOKEN 🦬</div>
         <div class="modal-bison">🦬</div>
+        <div id="lexi-reveal">
+            <div class="legendary">⚡ LEGENDARY PULL ⚡</div>
+            <img src="centaur.png" class="centaur-img" alt="Lexi the legendary bisontaur">
+        </div>
         <div id="winner-name">NAME</div>
         <div class="modal-tag" id="winner-tag">Charge forth and present!</div>
         <button id="close-modal-btn" onclick="closeModal()">Back to the Herd</button>
     </div>
 
-    <div class="marquee">🏈 Go Bills · 🍗 Extra Blue Cheese · 🦬 Thunder of Hooves</div>
+    <div class="marquee" aria-hidden="true"><span class="marquee-track" id="ticker"></span></div>
     <h1><span class="horn">🦬</span> MidMonth Meeting <span class="horn flip">🦬</span></h1>
     <h1 style="font-size: clamp(1.4rem, 4vw, 2.4rem); margin-top: 0;">~ Buffalo Edition ~</h1>
     <div class="subtitle" id="status-text">Which buffalo is roaming up to present?</div>
@@ -345,6 +447,8 @@
 
         <div class="bison bison-right" aria-hidden="true">🦬</div>
     </div>
+
+    <div class="meter"><div class="meter-fill" id="meter-fill"></div><div class="meter-label" id="meter-label">Herd-o-Meter: Grazing</div></div>
 
     <div class="controls">
         <button id="spin-btn" onclick="spin()">🦬 STAMPEDE! 🦬</button>
@@ -364,8 +468,8 @@
         // --- CONFIGURATION ---
         const fullTeam = [
             { name: "Sam",  color: "#ffcf5c" },   // Prairie Gold
-            { name: "Abby", color: "#4fa3ff" },   // Bills Blue (brightened)
-            { name: "Anna", color: "#ff5a6e" },   // Bills Red (brightened)
+            { name: "Abby", color: "#4fd1d9" },   // Frontier Turquoise
+            { name: "Anna", color: "#ff5a6e" },   // Barn Red (brightened)
             { name: "Liz",  color: "#9be37a" },   // Grassland Green
             { name: "Lexi", color: "#ff9a3c" }    // Sunset Orange
         ];
@@ -384,8 +488,19 @@
             "Officially the Bison of the Hour.",
             "Wings on us if you finish under time.",
             "The prairie awaits your update.",
-            "Stampede to that agenda!"
+            "Stampede to that agenda!",
+            "You've been selected by the herd. Resistance is futile.",
+            "Bison-ess as usual. Take it away!"
         ];
+
+        const tickerItems = [
+            "🦬 Thunder of Hooves", "🌾 Home on the Range", "🦬 Herd Mentality Encouraged",
+            "🍗 Extra Blue Cheese", "💨 Dust Advisory In Effect", "🦬 No Cattle Were Harmed",
+            "🌵 Where the Bison Roam", "🦬 Bison-ess Casual Dress Code", "🐾 Mind the Hoofprints",
+            "🦬 Shaggy Is a Lifestyle", "🌄 Graze Responsibly", "🦬 Moo-ve It Along (They Grunt, Actually)"
+        ];
+
+        const meterLevels = ["Grazing", "Twitchy", "Snorting", "Charging", "FULL STAMPEDE"];
 
         const bisonFacts = [
             "Bison fact: they can run up to 35 mph. Presentations should not.",
@@ -480,6 +595,25 @@
             });
         }
 
+        // Extra-triumphant brass for the bisontaur
+        function playFanfare() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const notes = [[392.0, 0], [392.0, 0.15], [392.0, 0.3], [523.3, 0.45], [659.3, 0.9], [784.0, 1.2]];
+            notes.forEach(([freq, t]) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = freq;
+                const start = now + t;
+                const len = t >= 1.2 ? 1.4 : 0.14;
+                gain.gain.setValueAtTime(0.12, start);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + len);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(start); osc.stop(start + len);
+            });
+        }
+
         // --- STAMPEDE ---
         function releaseStampede(count) {
             const field = document.getElementById('stampede');
@@ -495,6 +629,41 @@
                 runner.querySelector('span').style.animationDelay = (Math.random() * 0.25) + 's';
                 field.appendChild(runner);
                 setTimeout(() => runner.remove(), (duration + 3) * 1000);
+            }
+        }
+
+        function buildTicker() {
+            const half = tickerItems.join("  ·  ") + "  ·  ";
+            document.getElementById('ticker').innerText = half + half;
+        }
+
+        function setMeter(intensity) {
+            document.getElementById('meter-fill').style.width = (intensity * 100) + '%';
+            const level = meterLevels[Math.min(Math.floor(intensity * meterLevels.length), meterLevels.length - 1)];
+            document.getElementById('meter-label').innerText = "Herd-o-Meter: " + level;
+        }
+
+        function rollTumbleweed() {
+            const t = document.createElement('div');
+            t.className = 'tumbleweed';
+            t.style.bottom = (20 + Math.random() * 60) + 'px';
+            t.innerHTML = '<span>🌾</span>';
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 9500);
+        }
+
+        function bisonRain(count) {
+            for (let i = 0; i < count; i++) {
+                const d = document.createElement('div');
+                d.className = 'raindrop';
+                const duration = 1.8 + Math.random() * 1.8;
+                d.style.left = (Math.random() * 100) + 'vw';
+                d.style.fontSize = (24 + Math.random() * 40) + 'px';
+                d.style.animationDuration = duration + 's';
+                d.style.animationDelay = (Math.random() * 3) + 's';
+                d.innerText = Math.random() < 0.85 ? '🦬' : '💨';
+                document.body.appendChild(d);
+                setTimeout(() => d.remove(), (duration + 3.5) * 1000);
             }
         }
 
@@ -532,6 +701,7 @@
             const status = document.getElementById('status-text');
             status.innerText = spinLines[0];
             releaseStampede(14);
+            bisonRain(30);
 
             const strip = document.getElementById('strip');
             const winnerIndex = Math.floor(Math.random() * currentPool.length);
@@ -544,6 +714,7 @@
                 count++;
                 const intensity = count / totalTicks;
                 playTick(intensity);
+                setMeter(intensity);
                 if (count % 12 === 0) status.innerText = spinLines[Math.min(count / 12, spinLines.length - 1)];
                 if (count === 50) document.body.classList.add('red-alert');
                 if (count >= totalTicks) clearInterval(tickInterval);
@@ -553,21 +724,37 @@
             strip.style.transform = `translateY(${offset}px)`;
 
             setTimeout(() => {
-                handleWin(winner, winnerIndex);
+                // Giant bison charges the camera, then the reveal
+                const charge = document.getElementById('charge');
+                charge.classList.remove('go'); void charge.offsetWidth; charge.classList.add('go');
+                setTimeout(() => {
+                    charge.classList.remove('go');
+                    handleWin(winner, winnerIndex);
+                }, 800);
             }, 5000);
         }
 
         function handleWin(winner, index) {
             playBoom();
             const modal = document.getElementById('winner-modal');
+            const isLexi = winner.name === "Lexi";
+            modal.classList.toggle('lexi', isLexi);
+            document.getElementById('modal-kicker').innerText = isLexi
+                ? "🦬 THE BISONTAUR HAS ARRIVED 🦬"
+                : "🦬 THE HERD HAS SPOKEN 🦬";
+            if (isLexi) setTimeout(playFanfare, 900);
             const nameEl = document.getElementById('winner-name');
             nameEl.innerText = winner.name;
             nameEl.style.color = winner.color;
             nameEl.style.textShadow = `0 0 50px ${winner.color}, 6px 6px 0 #2b1a0e`;
-            document.getElementById('winner-tag').innerText = pick(winnerTags);
+            document.getElementById('winner-tag').innerText = isLexi
+                ? "Half woman. Half bison. All presentation."
+                : pick(winnerTags);
             modal.style.display = 'flex';
             fireConfetti(winner.color);
-            releaseStampede(20);
+            if (isLexi) setTimeout(() => fireConfetti('#ffd34d'), 700);
+            releaseStampede(isLexi ? 40 : 20);
+            bisonRain(isLexi ? 60 : 25);
             currentPool.splice(index, 1);
             addToHistory(winner);
         }
@@ -577,6 +764,7 @@
             document.body.classList.remove('spinning');
             document.body.classList.remove('red-alert');
             isSpinning = false;
+            setMeter(0);
             initWheel();
             showFact();
         }
@@ -606,12 +794,12 @@
             document.getElementById('fact').innerText = "🦬 " + pick(bisonFacts);
         }
 
-        // Confetti: a mix of colored squares, bison, wings, and grass
+        // Confetti: a mix of colored squares, bison, wings, grass, and cacti
         function fireConfetti(hexColor) {
             const canvas = document.getElementById('confetti');
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            const emojis = ['🦬', '🦬', '🦬', '🍗', '🌾', '🏈'];
+            const emojis = ['🦬', '🦬', '🦬', '🦬', '🍗', '🌾', '🌵', '💨'];
             const particles = [];
             for (let i = 0; i < 220; i++) {
                 const isEmoji = Math.random() < 0.35;
@@ -651,7 +839,13 @@
             animate();
         }
 
-        window.onload = () => { initWheel(); showFact(); releaseStampede(6); };
+        window.onload = () => {
+            buildTicker(); initWheel(); showFact(); releaseStampede(6);
+            setInterval(rollTumbleweed, 12000);
+            setTimeout(rollTumbleweed, 2000);
+            // Preload the bisontaur so her entrance is instant
+            new Image().src = 'centaur.png';
+        };
     </script>
 </body>
 </html>
