@@ -895,7 +895,7 @@
                     color: Math.random() < 0.7 ? hexColor : '#8b5a2b',
                     emoji: isEmoji ? pick(emojis) : null,
                     speedX: (Math.random() - 0.5) * 40, speedY: (Math.random() - 0.5) * 40,
-                    gravity: 0.25, angle: Math.random() * 6.2, spin: (Math.random() - 0.5) * 0.3
+                    gravity: 0.4, angle: Math.random() * 6.2, spin: (Math.random() - 0.5) * 0.3
                 });
             }
             let frame = 0;
@@ -904,7 +904,8 @@
                 let active = false;
                 particles.forEach(p => {
                     p.speedY += p.gravity; p.x += p.speedX; p.y += p.speedY;
-                    p.speedX *= 0.93; p.speedY *= 0.93; p.angle += p.spin;
+                    // Strong sideways drag keeps the burst tight; light vertical drag lets it actually fall
+                    p.speedX *= 0.95; p.speedY *= 0.98; p.angle += p.spin;
                     if (p.y < canvas.height && p.x > 0 && p.x < canvas.width) {
                         if (p.art && p.art.complete && p.art.naturalWidth) {
                             ctx.save();
